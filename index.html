@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/icons/icon.svg" />
+    <link rel="apple-touch-icon" href="/icons/icon-192.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <meta name="theme-color" content="#008753" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="VerifyNG" />
+    <link rel="manifest" href="/manifest.json" />
+    <title>VerifyNG — Verify Before You Pay</title>
+    <meta property="og:title" content="VerifyNG — Verify Before You Pay" />
+    <meta property="og:description" content="Fraud detection and verification platform for Nigerian users." />
+    <meta property="og:image" content="/icons/icon-512.png" />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="VerifyNG — Verify Before You Pay" />
+    <meta name="twitter:description" content="Fraud detection and verification platform for Nigerian users." />
+    <meta name="description" content="Verify bank accounts, phone numbers, and businesses before you pay. Report scams and protect others in your community." />
+  </head>
+  <body>
+    <div id="root">
+      <div id="splash-screen" style="position:fixed;inset:0;background:#008753;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;transition:opacity .4s ease;">
+        <svg width="80" height="80" viewBox="0 0 512 512" style="animation:splashPulse 1.2s ease-in-out infinite;">
+          <path d="M256 120 L360 170 V270 C360 340 310 380 256 400 C202 380 152 340 152 270 V170 Z" fill="none" stroke="#ffffff" stroke-width="24" stroke-linejoin="round"/>
+          <path d="M214 256 L246 288 L310 224" fill="none" stroke="#ffffff" stroke-width="28" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <p style="color:#fff;font-size:24px;font-weight:700;margin-top:16px;font-family:system-ui,sans-serif;">VerifyNG</p>
+        <p style="color:rgba(255,255,255,.8);font-size:13px;margin-top:4px;font-family:system-ui,sans-serif;">Verify Before You Pay</p>
+      </div>
+      <style>
+        @keyframes splashPulse {
+          0%, 100% { opacity: 1; transform: scale(1); }
+          50% { opacity: 0.7; transform: scale(0.95); }
+        }
+      </style>
+    </div>
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js').catch(() => {});
+        });
+      }
+      window.addEventListener('load', () => {
+        const splash = document.getElementById('splash-screen');
+        if (splash) {
+          setTimeout(() => {
+            splash.style.opacity = '0';
+            setTimeout(() => splash.remove(), 500);
+          }, 1200);
+        }
+      });
+    </script>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
