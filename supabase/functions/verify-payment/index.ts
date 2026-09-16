@@ -5,34 +5,52 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+const MONNIFY_BASE_URL = Deno.env.get('MONNIFY_BASE_URL') ?? 'https://api.monnify.com';
+
+async function getMonnifyAccessToken(): Promise<string> {
+  const apiKey = Deno.env.get('MONNIFY_API_KEY')!;
+  const secretKey = Deno.env.get('MONNIFY_SECRET_KEY')!;
+  const credentials = btoa(`${apiKey}:${secretKey}`);
+
+  const res = await fetch(`${MONNIFY_BASE_URL}/api/v1/auth/login`, {
+    method: 'POST',
+    headers: { Authorization: `Basic ${credentials}` },
+  });
+  const data = await res.json();
+  if (!data.requestSuccessful) throw new Error('Could not authenticate with Monnify');
+  return data.responseBody.accessToken;
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { reference, verification_id } = await req.json();
-    if (!reference || !verification_id) {
-      return new Response(JSON.stringify({ error: 'Missing reference or verification_id' }), {
+    const { transaction_reference, verification_id } = await req.json();
+    if (!transaction_reference || !verification_id) {
+      return new Response(JSON.stringify({ error: 'Missing transaction_reference or verification_id' }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
-    const paystackSecret = Deno.env.get('PAYSTACK_SECRET_KEY');
-    const verifyRes = await fetch(`https://api.paystack.co/transaction/verify/${reference}`, {
-      headers: { Authorization: `Bearer ${paystackSecret}` },
-    });
-    const verifyData = await verifyRes.json();
+    const accessToken = await getMonnifyAccessToken();
 
-    if (!verifyData.status || verifyData.data?.status !== 'success') {
+    const statusRes = await fetch(
+      `${MONNIFY_BASE_URL}/api/v2/transactions/${encodeURIComponent(transaction_reference)}`,
+      { headers: { Authorization: `Bearer ${accessToken}` } }
+    );
+    const statusData = await statusRes.json();
+
+    if (!statusData.requestSuccessful || statusData.responseBody?.paymentStatus !== 'PAID') {
       return new Response(JSON.stringify({ error: 'Payment not verified' }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
-    const amountPaidNaira = verifyData.data.amount / 100;
+    const amountPaid = statusData.responseBody.amountPaid;
 
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL')!,
@@ -43,8 +61,8 @@ Deno.serve(async (req) => {
       .from('business_verifications')
       .update({
         payment_status: 'paid',
-        payment_reference: reference,
-        amount_paid: amountPaidNaira,
+        payment_reference: transaction_reference,
+        amount_paid: amountPaid,
       })
       .eq('id', verification_id)
       .eq('payment_status', 'unpaid');
