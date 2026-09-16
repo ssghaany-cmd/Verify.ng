@@ -2,6 +2,13 @@ import { useState } from 'react';
 import { BadgeCheck, CheckCircle2, Loader2, AlertCircle } from 'lucide-react';
 import { useLanguage } from '@/lib/LanguageContext';
 import { supabase } from '@/lib/supabase';
+import { BADGE_FEE_NAIRA, MONNIFY_API_KEY, MONNIFY_CONTRACT_CODE } from '@/lib/config';
+
+declare global {
+  interface Window {
+    MonnifySDK: any;
+  }
+}
 
 const BUSINESS_CATEGORIES = [
   'Electronics Retail',
@@ -19,6 +26,8 @@ const BUSINESS_CATEGORIES = [
   'Other',
 ];
 
+type Stage = 'form' | 'paying' | 'verifying' | 'done' | 'payment_failed';
+
 export function BusinessVerifyPage() {
   const { t } = useLanguage();
   const [form, setForm] = useState({
@@ -29,38 +38,81 @@ export function BusinessVerifyPage() {
     email: '',
     category: '',
   });
-  const [submitting, setSubmitting] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
+  const [stage, setStage] = useState<Stage>('form');
   const [error, setError] = useState(false);
 
   const handleChange = (field: keyof typeof form, value: string) => {
     setForm((prev) => ({ ...prev, [field]: value }));
   };
 
+  const resetForm = () => {
+    setForm({ business_name: '', cac_number: '', owner_name: '', phone_number: '', email: '', category: '' });
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSubmitting(true);
     setError(false);
+    setStage('paying');
+
     try {
-      const { error: insertError } = await supabase.from('business_verifications').insert({
-        business_name: form.business_name,
-        cac_number: form.cac_number,
-        owner_name: form.owner_name,
-        phone_number: form.phone_number,
-        email: form.email,
-        category: form.category,
-      });
+      const { data: inserted, error: insertError } = await supabase
+        .from('business_verifications')
+        .insert({
+          business_name: form.business_name,
+          cac_number: form.cac_number,
+          owner_name: form.owner_name,
+          phone_number: form.phone_number,
+          email: form.email,
+          category: form.category,
+        })
+        .select('id')
+        .single();
+
       if (insertError) throw insertError;
-      setSubmitted(true);
-      setForm({ business_name: '', cac_number: '', owner_name: '', phone_number: '', email: '', category: '' });
+      const verificationId = inserted.id as string;
+
+      window.MonnifySDK.initialize({
+        amount: BADGE_FEE_NAIRA,
+        currency: 'NGN',
+        reference: `verifyng_${verificationId}_${Date.now()}`,
+        customerFullName: form.owner_name,
+        customerEmail: form.email,
+        apiKey: MONNIFY_API_KEY,
+        contractCode: MONNIFY_CONTRACT_CODE,
+        paymentDescription: 'VerifyNG Business Verification Badge',
+        onComplete: (response: { transactionReference: string; paymentStatus?: string; status?: string }) => {
+          const status = response.paymentStatus ?? response.status;
+          if (status === 'PAID' || status === 'SUCCESS') {
+            void finalizePayment(response.transactionReference, verificationId);
+          } else {
+            setStage('payment_failed');
+          }
+        },
+        onClose: () => {
+          setStage('payment_failed');
+        },
+      });
     } catch {
       setError(true);
-    } finally {
-      setSubmitting(false);
+      setStage('form');
     }
   };
 
-  if (submitted) {
+  const finalizePayment = async (transactionReference: string, verificationId: string) => {
+    setStage('verifying');
+    try {
+      const { error: fnError } = await supabase.functions.invoke('verify-payment', {
+        body: { transaction_reference: transactionReference, verification_id: verificationId },
+      });
+      if (fnError) throw fnError;
+      setStage('done');
+      resetForm();
+    } catch {
+      setStage('payment_failed');
+    }
+  };
+
+  if (stage === 'done') {
     return (
       <div className="px-4 py-8 max-w-lg mx-auto text-center animate-fade-in">
         <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-green-100 mb-4">
@@ -74,12 +126,21 @@ export function BusinessVerifyPage() {
         </div>
         <div>
           <button
-            onClick={() => setSubmitted(false)}
+            onClick={() => setStage('form')}
             className="bg-[#008753] hover:bg-[#007045] active:scale-95 transition-all text-white font-bold px-6 py-3 rounded-2xl text-sm"
           >
             {t('submitAnother')}
           </button>
         </div>
+      </div>
+    );
+  }
+
+  if (stage === 'verifying') {
+    return (
+      <div className="px-4 py-16 max-w-lg mx-auto text-center">
+        <Loader2 className="w-10 h-10 text-[#008753] animate-spin mx-auto mb-4" />
+        <p className="text-sm text-gray-600">{t('verifyingPayment')}</p>
       </div>
     );
   }
@@ -98,10 +159,14 @@ export function BusinessVerifyPage() {
         </div>
       </div>
 
-      {error && (
+      <div className="mb-4 bg-[#008753]/5 border border-[#008753]/20 rounded-xl p-3 text-sm text-gray-700">
+        {t('badgeFeeNote').replace('{amount}', BADGE_FEE_NAIRA.toLocaleString())}
+      </div>
+
+      {(error || stage === 'payment_failed') && (
         <div className="mb-4 flex items-center gap-2 bg-red-50 border border-red-200 rounded-xl p-3 text-sm text-red-700">
           <AlertCircle className="w-5 h-5 shrink-0" />
-          {t('errorOccurred')}
+          {stage === 'payment_failed' ? t('paymentCancelled') : t('errorOccurred')}
         </div>
       )}
 
@@ -193,19 +258,19 @@ export function BusinessVerifyPage() {
 
         <button
           type="submit"
-          disabled={submitting}
+          disabled={stage === 'paying'}
           className="w-full bg-[#008753] hover:bg-[#007045] disabled:bg-gray-300 active:scale-[0.98] transition-all text-white font-bold py-3.5 rounded-2xl text-base flex items-center justify-center gap-2"
         >
-          {submitting ? (
+          {stage === 'paying' ? (
             <>
               <Loader2 className="w-5 h-5 animate-spin" />
               {t('loading')}
             </>
           ) : (
-            t('submitApplication')
+            t('payNow')
           )}
         </button>
       </form>
     </div>
   );
-}
+      }
