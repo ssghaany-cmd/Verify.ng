@@ -33,9 +33,7 @@ const FAQ_ITEMS = [
   },
 ];
 
-export function AboutPage() {
-  const { t } = useLanguage();
-  const [openFaq, setOpenFaq] = useState<number | null>(0);
+export function AboutPage({ onOpenLegal }: { onOpenLegal: () => void }) {
 
   const steps = [
     { icon: Search, title: 'Search', desc: 'Enter a bank account number, phone number, or business name to check if it has been reported.' },
@@ -140,11 +138,12 @@ export function AboutPage() {
         </p>
       </div>
 
-      {/* Footer */}
+            {/* Footer */}
       <div className="text-center pb-4">
-        <p className="text-xs text-gray-400">VerifyNG &copy; 2026</p>
+        <button onClick={onOpenLegal} className="text-xs font-semibold text-[#008753] underline">
+          Privacy Policy & Terms of Service
+        </button>
+        <p className="text-xs text-gray-400 mt-3">VerifyNG &copy; 2026</p>
         <p className="text-xs text-gray-400 mt-1">Made with care for Nigeria</p>
       </div>
-    </div>
-  );
 }
