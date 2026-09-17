@@ -158,7 +158,7 @@ export function AboutPage({ onOpenLegal }: { onOpenLegal: () => void }) {
         </p>
         <div className="space-y-2">
           
-            href={`mailto:${CONTACT_EMAIL}`}
+               <a href={`mailto:${CONTACT_EMAIL}`}
             className="flex items-center gap-3 bg-white rounded-xl border border-gray-200 p-4"
           >
             <div className="w-10 h-10 rounded-lg bg-[#008753]/10 flex items-center justify-center shrink-0">
@@ -170,7 +170,7 @@ export function AboutPage({ onOpenLegal }: { onOpenLegal: () => void }) {
             </div>
           </a>
           
-            href={`https://wa.me/${WHATSAPP_NUMBER}?text=${WHATSAPP_MESSAGE}`}
+          <a href={`https://wa.me/${WHATSAPP_NUMBER}?text=${WHATSAPP_MESSAGE}`}
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center gap-3 bg-white rounded-xl border border-gray-200 p-4"
