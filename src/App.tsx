@@ -8,9 +8,11 @@ import { ReportScamPage } from '@/pages/ReportScamPage';
 import { RecentScamsPage } from '@/pages/RecentScamsPage';
 import { BusinessVerifyPage } from '@/pages/BusinessVerifyPage';
 import { AboutPage } from '@/pages/AboutPage';
+import { LegalPage } from '@/pages/LegalPage';
 
 function App() {
   const [activeTab, setActiveTab] = useState<Tab>('home');
+  const [showLegal, setShowLegal] = useState(false);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -34,7 +36,8 @@ function App() {
           {activeTab === 'report' && <ReportScamPage />}
           {activeTab === 'feed' && <RecentScamsPage />}
           {activeTab === 'business' && <BusinessVerifyPage />}
-          {activeTab === 'about' && <AboutPage />}
+          {activeTab === 'about' && !showLegal && <AboutPage onOpenLegal={() => setShowLegal(true)} />}
+          {activeTab === 'about' && showLegal && <LegalPage onBack={() => setShowLegal(false)} />}
         </main>
         <InstallPrompt />
         <BottomNav active={activeTab} onChange={handleTabChange} />
