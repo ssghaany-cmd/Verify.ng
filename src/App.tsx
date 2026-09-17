@@ -150,4 +150,4 @@ export function AboutPage({ onOpenLegal }: { onOpenLegal: () => void }) {
       </div>
     </div>
   );
-          }
+                                            }
