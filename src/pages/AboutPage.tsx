@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ShieldCheck, Search, AlertCircle, BadgeCheck, ChevronDown, Info, HelpCircle } from 'lucide-react';
+import { ShieldCheck, Search, AlertCircle, BadgeCheck, ChevronDown, Info, HelpCircle, Mail, MessageCircle } from 'lucide-react';
 import { useLanguage } from '@/lib/LanguageContext';
 
 const FAQ_ITEMS = [
@@ -32,6 +32,12 @@ const FAQ_ITEMS = [
     a: 'VerifyNG does not require login. The information you submit in reports (account numbers, phone numbers) is visible to the community to help others stay safe.',
   },
 ];
+
+const WHATSAPP_NUMBER = '2349030941549';
+const CONTACT_EMAIL = 'msghaany@gmail.com';
+const WHATSAPP_MESSAGE = encodeURIComponent(
+  "Hi VerifyNG, I'd like to request removal of my submitted data. Details: "
+);
 
 export function AboutPage({ onOpenLegal }: { onOpenLegal: () => void }) {
   const { t } = useLanguage();
@@ -140,6 +146,46 @@ export function AboutPage({ onOpenLegal }: { onOpenLegal: () => void }) {
         </p>
       </div>
 
+      {/* Contact / Data Removal */}
+      <div className="mb-8">
+        <h3 className="text-base font-bold text-gray-900 mb-4 flex items-center gap-2">
+          <Mail className="w-5 h-5 text-[#008753]" />
+          Contact & Data Removal
+        </h3>
+        <p className="text-xs text-gray-500 mb-3 px-1">
+          To request removal of a report or business application you submitted, or for any other question,
+          reach us here:
+        </p>
+        <div className="space-y-2">
+          
+            href={`mailto:${CONTACT_EMAIL}`}
+            className="flex items-center gap-3 bg-white rounded-xl border border-gray-200 p-4"
+          >
+            <div className="w-10 h-10 rounded-lg bg-[#008753]/10 flex items-center justify-center shrink-0">
+              <Mail className="w-5 h-5 text-[#008753]" />
+            </div>
+            <div>
+              <p className="text-sm font-bold text-gray-900">Email</p>
+              <p className="text-xs text-gray-500 mt-0.5">{CONTACT_EMAIL}</p>
+            </div>
+          </a>
+          
+            href={`https://wa.me/${WHATSAPP_NUMBER}?text=${WHATSAPP_MESSAGE}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-3 bg-white rounded-xl border border-gray-200 p-4"
+          >
+            <div className="w-10 h-10 rounded-lg bg-[#008753]/10 flex items-center justify-center shrink-0">
+              <MessageCircle className="w-5 h-5 text-[#008753]" />
+            </div>
+            <div>
+              <p className="text-sm font-bold text-gray-900">WhatsApp</p>
+              <p className="text-xs text-gray-500 mt-0.5">+{WHATSAPP_NUMBER}</p>
+            </div>
+          </a>
+        </div>
+      </div>
+
       {/* Footer */}
       <div className="text-center pb-4">
         <button onClick={onOpenLegal} className="text-xs font-semibold text-[#008753] underline">
@@ -150,4 +196,4 @@ export function AboutPage({ onOpenLegal }: { onOpenLegal: () => void }) {
       </div>
     </div>
   );
-              }
+      }
