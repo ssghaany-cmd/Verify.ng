@@ -3,6 +3,7 @@ import { Loader2, AlertCircle, ChevronDown, ChevronUp, ThumbsUp, Share2, ShieldC
 import { useLanguage } from '@/lib/LanguageContext';
 import { supabase, type ScamReport, SCAM_TYPE_LABELS } from '@/lib/supabase';
 import { maskAccountNumber, formatNaira, formatDate } from '@/lib/format';
+import { logError } from '@/lib/logger';
 
 export function RecentScamsPage() {
   const { t } = useLanguage();
@@ -27,7 +28,8 @@ export function RecentScamsPage() {
         .limit(50);
       if (fetchError) throw fetchError;
       setReports((data || []) as ScamReport[]);
-    } catch {
+    } catch (err) {
+      logError('RecentScamsPage.fetchReports', err);
       setError(true);
     } finally {
       setLoading(false);
@@ -41,11 +43,14 @@ export function RecentScamsPage() {
       prev.map((r) => (r.id === report.id ? { ...r, upvotes: r.upvotes + 1 } : r))
     );
     try {
-      await supabase
+      // supabase-js returns errors instead of throwing, so check explicitly
+      const { error: updateError } = await supabase
         .from('scam_reports')
         .update({ upvotes: report.upvotes + 1 })
         .eq('id', report.id);
-    } catch {
+      if (updateError) throw updateError;
+    } catch (err) {
+      logError('RecentScamsPage.handleUpvote', err);
       // Revert on failure
       setReports((prev) =>
         prev.map((r) => (r.id === report.id ? { ...r, upvotes: r.upvotes - 1 } : r))
