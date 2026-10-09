@@ -1,65 +1,67 @@
 # Verify.ng
 
-Verify.ng is a scam reporting and business verification platform built for helping people identify suspicious activity, report scams, and check whether a business or entity is legitimate.
+[![CI](../../actions/workflows/ci.yml/badge.svg)](../../actions/workflows/ci.yml)
 
-## Features
+Verify.ng is a community scam-reporting and business-verification PWA for Nigeria. Users search a bank account number, phone number, or business name and get an instant trust level based on community reports. Businesses can pay for a verification badge.
 
-- Home dashboard for quick access to key actions
-- Scam reporting form for users to submit complaints
-- Recent scams feed for public visibility
-- Business verification workflow
-- About and legal pages
-- Installable app experience with a mobile-friendly interface
-- Language-aware UI support
+## Overview
 
-## Tech Stack
+- **Search**: look up an account/phone/business and see a trust level (`safe`, `caution`, `highRisk`, `danger`) derived from report count (see `src/lib/trustScore.ts`).
+- **Report**: submit a scam report with optional evidence upload.
+- **Recent scams**: public feed with upvotes.
+- **Business verification**: apply, pay the badge fee via Monnify, then a Supabase Edge Function verifies the payment server-side.
+- English and Nigerian Pidgin UI; installable PWA.
 
-- React + TypeScript
-- Vite
-- Tailwind CSS
-- Supabase
-- Lucide React
+## Tech stack
 
-## Project Structure
+React 18, TypeScript, Vite, Tailwind CSS, Supabase (Postgres + Edge Functions), Monnify, Vitest + Testing Library.
 
-- `src/pages/` — main app pages such as home, scam reporting, recent scams, and business verification
-- `src/components/` — shared UI pieces like header, bottom navigation, and install prompt
-- `src/lib/` — app logic and language context helpers
-- `supabase/` — Supabase configuration and related database resources
-- `public/` — static assets
+## Setup
 
-## Getting Started
+Requires Node 20+ (`.nvmrc` provided).
 
-1. Install dependencies:
-   ```bash
-   npm install
-   ```
+```bash
+npm install
+cp .env.example .env.local   # then fill in the values
+```
 
-2. Create a `.env.local` file and configure your Supabase environment variables if required by your setup:
-   ```bash
-   VITE_SUPABASE_URL=your_supabase_url
-   VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
-   ```
+### Environment variables
 
-3. Start the development server:
-   ```bash
-   npm run dev
-   ```
+| Variable | Purpose |
+| --- | --- |
+| `VITE_SUPABASE_URL` | Supabase project URL |
+| `VITE_SUPABASE_ANON_KEY` | Supabase anon (public) key |
+| `VITE_MONNIFY_API_KEY` | Monnify public API key (checkout) |
+| `VITE_MONNIFY_CONTRACT_CODE` | Monnify contract code |
 
-4. Build the project:
-   ```bash
-   npm run build
-   ```
+Edge Function secrets (`MONNIFY_API_KEY`, `MONNIFY_SECRET_KEY`, optional `MONNIFY_BASE_URL`) are set with `supabase secrets set` and never ship to the browser. Apply the schema in `supabase/migrations/` to your project.
 
-5. Check types:
-   ```bash
-   npm run typecheck
-   ```
+## Scripts
 
-## Notes
+| Command | What it does |
+| --- | --- |
+| `npm run dev` | Start the dev server |
+| `npm test` | Run the Vitest suite once (no network or credentials needed) |
+| `npm run test:watch` | Tests in watch mode |
+| `npm run lint` | ESLint |
+| `npm run typecheck` | `tsc --noEmit` |
+| `npm run build` | Production build |
 
-This project integrates with Supabase for backend services and authentication-related flows. Make sure the required schema and data tables are configured before running the app in a production environment.
+CI (`.github/workflows/ci.yml`) runs install, lint, typecheck, test, build and `npm audit` on every push and pull request.
+
+## Architecture
+
+- `src/pages/` – route-level screens (Home search, Report, Recent, Business verify, About, Legal)
+- `src/components/` – shared UI (`TrustScoreCard`, header, nav, install prompt)
+- `src/lib/` – pure logic and helpers: `trustScore.ts`, `format.ts`, `translations.ts`, `logger.ts`, Supabase client/types in `supabase.ts`, env-driven `config.ts`
+- `supabase/migrations/` – database schema
+- `supabase/functions/verify-payment/index.ts` – verifies a Monnify transaction server-side and approves the business verification
+- `src/test/` – test setup; tests live next to the code as `*.test.ts(x)`; Supabase is mocked with `vi.mock('@/lib/supabase')`
+
+## Contributing
+
+Keep each change in a small commit that includes its tests. Errors in `catch` blocks must go through `logError(context, err)` from `src/lib/logger.ts`.
 
 ## License
 
-This project is private and intended for internal or limited distribution unless otherwise stated.
+Private; internal or limited distribution unless otherwise stated.
