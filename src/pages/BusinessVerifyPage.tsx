@@ -3,10 +3,32 @@ import { BadgeCheck, CheckCircle2, Loader2, AlertCircle } from 'lucide-react';
 import { useLanguage } from '@/lib/LanguageContext';
 import { supabase } from '@/lib/supabase';
 import { BADGE_FEE_NAIRA, MONNIFY_API_KEY, MONNIFY_CONTRACT_CODE } from '@/lib/config';
+import { logError } from '@/lib/logger';
+
+type MonnifyPaymentResponse = {
+  transactionReference: string;
+  paymentStatus?: string;
+  status?: string;
+};
+
+type MonnifySDK = {
+  initialize: (options: {
+    amount: number;
+    currency: string;
+    reference: string;
+    customerFullName: string;
+    customerEmail: string;
+    apiKey: string;
+    contractCode: string;
+    paymentDescription: string;
+    onComplete: (response: MonnifyPaymentResponse) => void;
+    onClose: () => void;
+  }) => void;
+};
 
 declare global {
   interface Window {
-    MonnifySDK: any;
+    MonnifySDK: MonnifySDK;
   }
 }
 
@@ -92,7 +114,8 @@ export function BusinessVerifyPage() {
           setStage('payment_failed');
         },
       });
-    } catch {
+    } catch (err) {
+      logError('BusinessVerifyPage.handleSubmit', err);
       setError(true);
       setStage('form');
     }
@@ -107,7 +130,8 @@ export function BusinessVerifyPage() {
       if (fnError) throw fnError;
       setStage('done');
       resetForm();
-    } catch {
+    } catch (err) {
+      logError('BusinessVerifyPage.finalizePayment', err);
       setStage('payment_failed');
     }
   };

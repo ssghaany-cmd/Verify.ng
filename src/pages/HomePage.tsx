@@ -4,6 +4,7 @@ import { useLanguage } from '@/lib/LanguageContext';
 import { supabase, type ScamReport, type BusinessVerification } from '@/lib/supabase';
 import { calculateTrustScore } from '@/lib/trustScore';
 import { TrustScoreCard } from '@/components/TrustScoreCard';
+import { logError } from '@/lib/logger';
 
 type SearchResult = {
   reports: ScamReport[];
@@ -70,7 +71,8 @@ export function HomePage() {
         identifier: trimmed,
         bankName,
       });
-    } catch {
+    } catch (err) {
+      logError('HomePage.handleSearch', err);
       setError(true);
     } finally {
       setLoading(false);

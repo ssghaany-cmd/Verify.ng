@@ -4,6 +4,7 @@ import { useLanguage } from '@/lib/LanguageContext';
 import { supabase, type ScamType } from '@/lib/supabase';
 import { NIGERIAN_BANKS } from '@/lib/banks';
 import { SCAM_TYPE_LABELS } from '@/lib/supabase';
+import { logError } from '@/lib/logger';
 
 export function ReportScamPage() {
   const { t } = useLanguage();
@@ -87,7 +88,8 @@ export function ReportScamPage() {
         description: '',
       });
       removeFile();
-    } catch {
+    } catch (err) {
+      logError('ReportScamPage.handleSubmit', err);
       setError(true);
     } finally {
       setSubmitting(false);

@@ -1,31 +1,50 @@
+export type TrustLevel = 'safe' | 'caution' | 'highRisk' | 'danger';
 
-import { describe, expect, it } from 'vitest';
-import { calculateTrustScore } from './trustScore';
+export type TrustScoreResult = {
+  level: TrustLevel;
+  reportCount: number;
+};
 
-describe('calculateTrustScore', () => {
-  it('returns safe for zero reports', () => {
-    expect(calculateTrustScore(0)).toEqual({
-      level: 'safe',
-      reportCount: 0,
-    });
-  });
+export function calculateTrustScore(reportCount: number): TrustScoreResult {
+  if (reportCount === 0) return { level: 'safe', reportCount };
+  if (reportCount <= 2) return { level: 'caution', reportCount };
+  if (reportCount <= 5) return { level: 'highRisk', reportCount };
+  return { level: 'danger', reportCount };
+}
 
-  it('returns caution for 1–2 reports', () => {
-    expect(calculateTrustScore(1).level).toBe('caution');
-    expect(calculateTrustScore(2).level).toBe('caution');
-  });
-
-  it('returns highRisk for 3–5 reports', () => {
-    expect(calculateTrustScore(3).level).toBe('highRisk');
-    expect(calculateTrustScore(5).level).toBe('highRisk');
-  });
-
-  it('returns danger for 6 or more reports', () => {
-    expect(calculateTrustScore(6).level).toBe('danger');
-    expect(calculateTrustScore(10).level).toBe('danger');
-  });
-
-  it('preserves the supplied report count', () => {
-    expect(calculateTrustScore(4).reportCount).toBe(4);
-  });
-});
+export const TRUST_STYLES: Record<TrustLevel, {
+  bg: string;
+  text: string;
+  border: string;
+  icon: string;
+  labelKey: 'verifiedSafe' | 'caution' | 'highRisk' | 'danger';
+}> = {
+  safe: {
+    bg: 'bg-green-50',
+    text: 'text-green-700',
+    border: 'border-green-200',
+    icon: 'text-green-600',
+    labelKey: 'verifiedSafe',
+  },
+  caution: {
+    bg: 'bg-yellow-50',
+    text: 'text-yellow-700',
+    border: 'border-yellow-300',
+    icon: 'text-yellow-600',
+    labelKey: 'caution',
+  },
+  highRisk: {
+    bg: 'bg-orange-50',
+    text: 'text-orange-700',
+    border: 'border-orange-300',
+    icon: 'text-orange-600',
+    labelKey: 'highRisk',
+  },
+  danger: {
+    bg: 'bg-red-50',
+    text: 'text-red-700',
+    border: 'border-red-300',
+    icon: 'text-red-600',
+    labelKey: 'danger',
+  },
+};
