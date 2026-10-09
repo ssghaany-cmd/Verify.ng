@@ -69,7 +69,11 @@ export type TranslationKey =
   | 'submitAnother'
   | 'enterAccountNumber'
   | 'enterPhoneNumber'
-  | 'enterBusinessName';
+  | 'enterBusinessName'
+  | 'verifyingPayment'
+  | 'badgeFeeNote'
+  | 'paymentCancelled'
+  | 'payNow';
 
 export const translations: Record<Language, Record<TranslationKey, string>> = {
   english: {
@@ -142,6 +146,10 @@ export const translations: Record<Language, Record<TranslationKey, string>> = {
     enterAccountNumber: 'Enter 10-digit account number',
     enterPhoneNumber: 'Enter phone number',
     enterBusinessName: 'Enter business name',
+    verifyingPayment: 'Verifying your payment...',
+    badgeFeeNote: 'A one-time fee of ₦{amount} applies for the verified badge.',
+    paymentCancelled: 'Payment was not completed. Please try again.',
+    payNow: 'Pay Now',
   },
   pidgin: {
     verifyBeforeYouPay: 'Check Well Before You Pay',
@@ -213,5 +221,9 @@ export const translations: Record<Language, Record<TranslationKey, string>> = {
     enterAccountNumber: 'Put 10-digit account number',
     enterPhoneNumber: 'Put phone number',
     enterBusinessName: 'Put business name',
+    verifyingPayment: 'We dey confirm your payment...',
+    badgeFeeNote: 'You go pay one-time fee of ₦{amount} for the verified badge.',
+    paymentCancelled: 'Payment no complete. Try again.',
+    payNow: 'Pay Now',
   },
 };
