@@ -73,7 +73,14 @@ export type TranslationKey =
   | 'verifyingPayment'
   | 'badgeFeeNote'
   | 'paymentCancelled'
-  | 'payNow';
+  | 'payNow'
+  | 'invalidAccountNumber'
+  | 'invalidPhoneNumber'
+  | 'invalidAmount'
+  | 'invalidEvidenceFile'
+  | 'retry'
+  | 'invalidCacNumber'
+  | 'invalidEmail';
 
 export const translations: Record<Language, Record<TranslationKey, string>> = {
   english: {
@@ -150,6 +157,13 @@ export const translations: Record<Language, Record<TranslationKey, string>> = {
     badgeFeeNote: 'A one-time fee of ₦{amount} applies for the verified badge.',
     paymentCancelled: 'Payment was not completed. Please try again.',
     payNow: 'Pay Now',
+    invalidAccountNumber: 'Enter a valid 10-digit account number.',
+    invalidPhoneNumber: 'Enter a valid Nigerian phone number, e.g. 08031234567.',
+    invalidAmount: 'Enter a valid amount of 0 or more.',
+    invalidEvidenceFile: 'Evidence must be an image under 5 MB.',
+    retry: 'Try again',
+    invalidCacNumber: 'Enter a valid CAC number, e.g. RC1234567.',
+    invalidEmail: 'Enter a valid email address.',
   },
   pidgin: {
     verifyBeforeYouPay: 'Check Well Before You Pay',
@@ -225,5 +239,12 @@ export const translations: Record<Language, Record<TranslationKey, string>> = {
     badgeFeeNote: 'You go pay one-time fee of ₦{amount} for the verified badge.',
     paymentCancelled: 'Payment no complete. Try again.',
     payNow: 'Pay Now',
+    invalidAccountNumber: 'Put correct 10-digit account number.',
+    invalidPhoneNumber: 'Put correct Nigerian phone number, like 08031234567.',
+    invalidAmount: 'Put correct amount, 0 or more.',
+    invalidEvidenceFile: 'Evidence must be picture wey small pass 5 MB.',
+    retry: 'Try again',
+    invalidCacNumber: 'Put correct CAC number, like RC1234567.',
+    invalidEmail: 'Put correct email address.',
   },
 };
