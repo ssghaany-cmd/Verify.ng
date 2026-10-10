@@ -43,11 +43,14 @@ Edge Function secrets (`MONNIFY_API_KEY`, `MONNIFY_SECRET_KEY`, optional `MONNIF
 | `npm run dev` | Start the dev server |
 | `npm test` | Run the Vitest suite once (no network or credentials needed) |
 | `npm run test:watch` | Tests in watch mode |
+| `npm run test:coverage` | Tests with a coverage summary (`coverage/` is gitignored) |
 | `npm run lint` | ESLint |
 | `npm run typecheck` | `tsc --noEmit` |
 | `npm run build` | Production build |
 
-CI (`.github/workflows/ci.yml`) runs install, lint, typecheck, test, build and `npm audit` on every push and pull request.
+CI (`.github/workflows/ci.yml`) runs install, lint, typecheck, tests with a 60% coverage threshold, build and a production `npm audit` on every push and pull request.
+
+Forms are validated by the shared rules in `src/lib/validation.ts` (account numbers, Nigerian phone numbers, CAC numbers, emails, amounts, evidence files) before anything is sent to Supabase.
 
 ## Architecture
 
