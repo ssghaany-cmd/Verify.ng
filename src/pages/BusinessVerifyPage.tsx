@@ -4,6 +4,8 @@ import { useLanguage } from '@/lib/LanguageContext';
 import { supabase } from '@/lib/supabase';
 import { BADGE_FEE_NAIRA, MONNIFY_API_KEY, MONNIFY_CONTRACT_CODE } from '@/lib/config';
 import { logError } from '@/lib/logger';
+import type { TranslationKey } from '@/lib/translations';
+import { normalizeDigits, validateBusinessForm } from '@/lib/validation';
 
 type MonnifyPaymentResponse = {
   transactionReference: string;
@@ -62,6 +64,7 @@ export function BusinessVerifyPage() {
   });
   const [stage, setStage] = useState<Stage>('form');
   const [error, setError] = useState(false);
+  const [validationError, setValidationError] = useState<TranslationKey | null>(null);
 
   const handleChange = (field: keyof typeof form, value: string) => {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -74,17 +77,25 @@ export function BusinessVerifyPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(false);
+
+    const problem = validateBusinessForm(form);
+    if (problem) {
+      setValidationError(problem);
+      return;
+    }
+
+    setValidationError(null);
     setStage('paying');
 
     try {
       const { data: inserted, error: insertError } = await supabase
         .from('business_verifications')
         .insert({
-          business_name: form.business_name,
-          cac_number: form.cac_number,
-          owner_name: form.owner_name,
-          phone_number: form.phone_number,
-          email: form.email,
+          business_name: form.business_name.trim(),
+          cac_number: form.cac_number.trim(),
+          owner_name: form.owner_name.trim(),
+          phone_number: normalizeDigits(form.phone_number),
+          email: form.email.trim(),
           category: form.category,
         })
         .select('id')
@@ -187,10 +198,14 @@ export function BusinessVerifyPage() {
         {t('badgeFeeNote').replace('{amount}', BADGE_FEE_NAIRA.toLocaleString())}
       </div>
 
-      {(error || stage === 'payment_failed') && (
-        <div className="mb-4 flex items-center gap-2 bg-red-50 border border-red-200 rounded-xl p-3 text-sm text-red-700">
+      {(error || validationError || stage === 'payment_failed') && (
+        <div role="alert" className="mb-4 flex items-center gap-2 bg-red-50 border border-red-200 rounded-xl p-3 text-sm text-red-700">
           <AlertCircle className="w-5 h-5 shrink-0" />
-          {stage === 'payment_failed' ? t('paymentCancelled') : t('errorOccurred')}
+          {validationError
+            ? t(validationError)
+            : stage === 'payment_failed'
+              ? t('paymentCancelled')
+              : t('errorOccurred')}
         </div>
       )}
 

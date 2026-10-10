@@ -87,7 +87,7 @@ export function RecentScamsPage() {
           onClick={fetchReports}
           className="mt-4 w-full bg-[#008753] text-white font-semibold py-3 rounded-xl text-sm active:scale-95"
         >
-          {t('loading')}
+          {t('retry')}
         </button>
       </div>
     );
