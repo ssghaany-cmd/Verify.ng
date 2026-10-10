@@ -5,6 +5,13 @@ import { supabase, type ScamType } from '@/lib/supabase';
 import { NIGERIAN_BANKS } from '@/lib/banks';
 import { SCAM_TYPE_LABELS } from '@/lib/supabase';
 import { logError } from '@/lib/logger';
+import type { TranslationKey } from '@/lib/translations';
+import {
+  normalizeDigits,
+  parseAmount,
+  validateEvidenceFile,
+  validateReportForm,
+} from '@/lib/validation';
 
 export function ReportScamPage() {
   const { t } = useLanguage();
@@ -22,6 +29,7 @@ export function ReportScamPage() {
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState(false);
+  const [validationError, setValidationError] = useState<TranslationKey | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleChange = (field: keyof typeof form, value: string) => {
@@ -31,6 +39,13 @@ export function ReportScamPage() {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    const fileProblem = validateEvidenceFile(file);
+    if (fileProblem) {
+      setValidationError(fileProblem);
+      e.target.value = '';
+      return;
+    }
+    setValidationError(null);
     setEvidenceFile(file);
     const reader = new FileReader();
     reader.onload = () => setEvidencePreview(reader.result as string);
@@ -47,6 +62,13 @@ export function ReportScamPage() {
     e.preventDefault();
     if (!form.account_number || !form.bank_name || !form.scam_type || !form.description) return;
 
+    const problem = validateReportForm(form);
+    if (problem) {
+      setValidationError(problem);
+      return;
+    }
+
+    setValidationError(null);
     setSubmitting(true);
     setError(false);
 
@@ -58,18 +80,21 @@ export function ReportScamPage() {
         const { error: uploadError } = await supabase.storage
           .from('evidence')
           .upload(fileName, evidenceFile);
-        if (!uploadError) {
+        if (uploadError) {
+          // The report is still submitted, just without the attachment.
+          logError('ReportScamPage.uploadEvidence', uploadError);
+        } else {
           const { data: urlData } = supabase.storage.from('evidence').getPublicUrl(fileName);
           evidenceUrl = urlData.publicUrl;
         }
       }
 
       const { error: insertError } = await supabase.from('scam_reports').insert({
-        account_number: form.account_number,
+        account_number: normalizeDigits(form.account_number),
         bank_name: form.bank_name,
-        phone_number: form.phone_number || null,
+        phone_number: form.phone_number.trim() ? normalizeDigits(form.phone_number) : null,
         business_name: form.business_name || null,
-        amount_lost: form.amount_lost ? parseFloat(form.amount_lost) : 0,
+        amount_lost: parseAmount(form.amount_lost) ?? 0,
         scam_type: form.scam_type,
         description: form.description,
         evidence_url: evidenceUrl,
@@ -121,10 +146,13 @@ export function ReportScamPage() {
         <p className="text-sm text-gray-500">{t('disclaimerText')}</p>
       </div>
 
-      {error && (
-        <div className="mb-4 flex items-center gap-2 bg-red-50 border border-red-200 rounded-xl p-3 text-sm text-red-700">
+      {(error || validationError) && (
+        <div
+          role="alert"
+          className="mb-4 flex items-center gap-2 bg-red-50 border border-red-200 rounded-xl p-3 text-sm text-red-700"
+        >
           <AlertCircle className="w-5 h-5 shrink-0" />
-          {t('errorOccurred')}
+          {validationError ? t(validationError) : t('errorOccurred')}
         </div>
       )}
 
